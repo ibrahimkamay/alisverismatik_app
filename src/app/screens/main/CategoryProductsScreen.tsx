@@ -50,45 +50,26 @@ export function CategoryProductsScreen() {
     }
   };
 
-  const updateProductQuantity = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      setSelectedProducts(prev => prev.filter(p => p.id !== productId));
-    } else {
-      setSelectedProducts(prev => prev.map(p => 
-        p.id === productId ? { ...p, quantity } : p
-      ));
-    }
-  };
-
-  const handleAddToList = () => {
+  const handleContinue = () => {
     if (selectedProducts.length === 0) {
       Alert.alert('Uyarı', 'Lütfen en az bir ürün seçin');
       return;
     }
 
-    Alert.alert(
-      'Başarılı', 
-      `${selectedProducts.length} ürün "${listTitle}" listesine eklendi!`,
-      [
-        {
-          text: 'Tamam',
-          onPress: () => navigation.goBack()
-        }
-      ]
-    );
+    (navigation as any).navigate('PriceEntry', {
+      listId,
+      listTitle,
+      categoryName,
+      selectedProducts
+    });
   };
 
   const isProductSelected = (productId: string) => {
     return selectedProducts.some(p => p.id === productId);
   };
 
-  const getProductQuantity = (productId: string) => {
-    return selectedProducts.find(p => p.id === productId)?.quantity || 1;
-  };
-
   const renderProductItem = ({ item }: { item: typeof categoryProducts[0] }) => {
     const isSelected = isProductSelected(item.id);
-    const quantity = getProductQuantity(item.id);
 
     return (
       <TouchableOpacity
@@ -100,33 +81,14 @@ export function CategoryProductsScreen() {
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-1">
-            <Text className="text-base font-medium text-textPrimary mb-1">
+            <Text className="text-base font-medium text-textPrimary">
               {item.name}
-            </Text>
-            <Text className="text-sm text-textSecondary">
-              Birim: {item.unit}
             </Text>
           </View>
           
           {isSelected ? (
-            <View className="flex-row items-center">
-              <TouchableOpacity
-                className="w-8 h-8 bg-gray-200 rounded-full items-center justify-center"
-                onPress={() => updateProductQuantity(item.id, quantity - 1)}
-              >
-                <Ionicons name="remove" size={16} color="#6B7280" />
-              </TouchableOpacity>
-              
-              <Text className="mx-3 text-base font-bold text-primary min-w-[20px] text-center">
-                {quantity}
-              </Text>
-              
-              <TouchableOpacity
-                className="w-8 h-8 bg-primary rounded-full items-center justify-center"
-                onPress={() => updateProductQuantity(item.id, quantity + 1)}
-              >
-                <Ionicons name="add" size={16} color="white" />
-              </TouchableOpacity>
+            <View className="w-6 h-6 bg-primary rounded-full items-center justify-center">
+              <Ionicons name="checkmark" size={16} color="white" />
             </View>
           ) : (
             <View className="w-6 h-6 border-2 border-gray-300 rounded-full" />
@@ -192,11 +154,11 @@ export function CategoryProductsScreen() {
         <View className="border-t border-gray-100 p-4 bg-white">
           <TouchableOpacity
             className="bg-primary py-4 rounded-lg flex-row items-center justify-center"
-            onPress={handleAddToList}
+            onPress={handleContinue}
           >
             <Ionicons name="basket" size={20} color="white" style={{ marginRight: 8 }} />
             <Text className="text-white font-bold text-base">
-              {selectedProducts.length} Ürünü Listeye Ekle
+              Devam Et ({selectedProducts.length} ürün)
             </Text>
           </TouchableOpacity>
         </View>

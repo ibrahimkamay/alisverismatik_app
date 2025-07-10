@@ -7,6 +7,7 @@ import { ProfileScreen } from '../screens/main/ProfileScreen';
 import { CreateListModal } from '../screens/main/CreateListModal';
 import { CategoriesScreen } from '../screens/main/CategoriesScreen';
 import { CategoryProductsScreen } from '../screens/main/CategoryProductsScreen';
+import { PriceEntryScreen } from '../screens/main/PriceEntryScreen';
 
 export type MainStackParamList = {
   MainTabs: undefined;
@@ -19,6 +20,17 @@ export type MainStackParamList = {
     listTitle: string;
     categoryId: string;
     categoryName: string;
+  };
+  PriceEntry: {
+    listId: string;
+    listTitle: string;
+    categoryName: string;
+    selectedProducts: Array<{
+      id: string;
+      name: string;
+      unit: string;
+      quantity: number;
+    }>;
   };
 };
 
@@ -97,6 +109,10 @@ export function MainNavigator() {
       <Stack.Screen 
         name="CategoryProducts" 
         component={CategoryProductsScreen} 
+      />
+      <Stack.Screen 
+        name="PriceEntry" 
+        component={PriceEntryScreen} 
       />
     </Stack.Navigator>
   );
