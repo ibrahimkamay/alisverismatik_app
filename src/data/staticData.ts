@@ -4,14 +4,14 @@ export const categories = [
     name: 'Kuru Gıdalar & Bakliyat',
     icon: 'nutrition',
     color: '#D97706',
-    productCount: 2
+    productCount: 4
   },
   {
     id: 'basic-foods',
     name: 'Temel Gıda & Baharatlar',
     icon: 'restaurant',
     color: '#DC2626',
-    productCount: 2
+    productCount: 4
   },
   {
     id: 'liquid-foods',
@@ -123,11 +123,15 @@ export const categories = [
 export const products = {
   'dry-foods': [
     { id: 'red-lentil', name: 'Kırmızı Mercimek', unit: 'kg' },
-    { id: 'green-lentil', name: 'Yeşil Mercimek', unit: 'kg' }
+    { id: 'green-lentil', name: 'Yeşil Mercimek', unit: 'kg' },
+    { id: 'chickpea', name: 'Nohut', unit: 'kg' },
+    { id: 'kidney-bean', name: 'Barbunya', unit: 'kg' }
   ],
   'basic-foods': [
     { id: 'salt', name: 'Tuz', unit: 'kg' },
-    { id: 'sugar', name: 'Şeker', unit: 'kg' }
+    { id: 'sugar', name: 'Şeker', unit: 'kg' },
+    { id: 'black-pepper', name: 'Karabiber', unit: 'gr' },
+    { id: 'red-pepper-flakes', name: 'Pul Biber', unit: 'gr' }
   ],
   'liquid-foods': [],
   'breakfast': [],
