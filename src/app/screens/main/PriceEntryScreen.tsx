@@ -58,7 +58,24 @@ export function PriceEntryScreen() {
       return;
     }
 
-    (navigation as any).navigate('Lists');
+    Alert.alert(
+      'Ürünler Eklendi!',
+      'Başka kategorilerden de ürün eklemek ister misiniz?',
+      [
+        {
+          text: 'Alışverişi Tamamla',
+          style: 'cancel',
+          onPress: () => (navigation as any).navigate('Lists')
+        },
+        {
+          text: 'Başka Kategori Ekle',
+          onPress: () => (navigation as any).navigate('Categories', {
+            listId,
+            listTitle
+          })
+        }
+      ]
+    );
   };
 
   const getTotalPrice = () => {
