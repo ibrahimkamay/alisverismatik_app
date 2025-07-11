@@ -12,8 +12,15 @@ type RouteParams = {
     selectedProducts: Array<{
       id: string;
       name: string;
-      unit: string;
       quantity: number;
+    }>;
+    existingProducts?: Array<{
+      id: string;
+      name: string;
+      quantity: number;
+      unitPrice: number;
+      categoryId: string;
+      categoryName: string;
     }>;
   };
 };
@@ -21,7 +28,6 @@ type RouteParams = {
 interface ProductWithPrice {
   id: string;
   name: string;
-  unit: string;
   quantity: number;
   price: string;
 }
@@ -29,7 +35,7 @@ interface ProductWithPrice {
 export function PriceEntryScreen() {
   const route = useRoute<RouteProp<RouteParams, 'PriceEntry'>>();
   const navigation = useNavigation();
-  const { listId, listTitle, categoryName, selectedProducts } = route.params;
+  const { listId, listTitle, categoryName, selectedProducts, existingProducts } = route.params;
   
   const [productsWithPrices, setProductsWithPrices] = useState<ProductWithPrice[]>(
     selectedProducts.map(product => ({
@@ -63,16 +69,47 @@ export function PriceEntryScreen() {
       'Başka kategorilerden de ürün eklemek ister misiniz?',
       [
         {
-          text: 'Alışverişi Tamamla',
+          text: 'Özeti Görüntüle',
           style: 'cancel',
-          onPress: () => (navigation as any).navigate('Lists')
+          onPress: () => {
+            const newProducts = productsWithPrices.map(p => ({
+              id: p.id,
+              name: p.name,
+              quantity: p.quantity,
+              unitPrice: parseFloat(p.price),
+              categoryId: categoryName === 'Kuru Gıdalar & Bakliyat' ? 'dry-foods' : 'basic-foods',
+              categoryName: categoryName,
+            }));
+            
+            const allProducts = [...(existingProducts || []), ...newProducts];
+            
+            (navigation as any).navigate('ListSummary', {
+              listId,
+              listTitle,
+              addedProducts: allProducts
+            });
+          }
         },
         {
           text: 'Başka Kategori Ekle',
-          onPress: () => (navigation as any).navigate('Categories', {
-            listId,
-            listTitle
-          })
+          onPress: () => {
+            const newProducts = productsWithPrices.map(p => ({
+              id: p.id,
+              name: p.name,
+              quantity: p.quantity,
+              unitPrice: parseFloat(p.price),
+              categoryId: categoryName === 'Kuru Gıdalar & Bakliyat' ? 'dry-foods' : 'basic-foods',
+              categoryName: categoryName,
+            }));
+            
+            const allProducts = [...(existingProducts || []), ...newProducts];
+            
+            (navigation as any).navigate('Categories', {
+              listId,
+              listTitle,
+              existingProducts: allProducts
+            });
+          }
         }
       ]
     );
@@ -81,7 +118,7 @@ export function PriceEntryScreen() {
   const getTotalPrice = () => {
     return productsWithPrices.reduce((sum, p) => {
       const price = parseFloat(p.price) || 0;
-      return sum + (price * p.quantity);
+      return sum + price;
     }, 0).toFixed(2);
   };
 
@@ -91,7 +128,7 @@ export function PriceEntryScreen() {
 
   const renderProductItem = ({ item }: { item: ProductWithPrice }) => {
     const unitPrice = parseFloat(item.price) || 0;
-    const totalItemPrice = (unitPrice * item.quantity).toFixed(2);
+    const totalItemPrice = unitPrice.toFixed(2);
 
     return (
       <View className="bg-card p-4 rounded-xl shadow-sm mb-3 mx-4 border border-gray-200">
@@ -154,7 +191,7 @@ export function PriceEntryScreen() {
           <FlatList
             data={productsWithPrices}
             renderItem={renderProductItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => `priceentry-${item.id}`}
             contentContainerStyle={{ paddingVertical: 16 }}
             showsVerticalScrollIndicator={false}
           />

@@ -11,31 +11,76 @@ type RouteParams = {
     listTitle: string;
     categoryId: string;
     categoryName: string;
+    existingProducts?: Array<{
+      id: string;
+      name: string;
+      quantity: number;
+      unitPrice: number;
+      categoryId: string;
+      categoryName: string;
+    }>;
   };
 };
 
 interface SelectedProduct {
   id: string;
   name: string;
-  unit: string;
   quantity: number;
 }
 
 export function CategoryProductsScreen() {
   const route = useRoute<RouteProp<RouteParams, 'CategoryProducts'>>();
   const navigation = useNavigation();
-  const { listId, listTitle, categoryId, categoryName } = route.params;
+  const { listId, listTitle, categoryId, categoryName, existingProducts } = route.params;
   
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
   const [searchText, setSearchText] = useState('');
   
   const categoryProducts = products[categoryId as keyof typeof products] || [];
   
+  // Bu kategoriden zaten eklenmiş ürünleri bul
+  const existingProductsInThisCategory = existingProducts?.filter(p => p.categoryId === categoryId) || [];
+  
   const filteredProducts = categoryProducts.filter(product =>
     product.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
+  const isProductAlreadyAdded = (productId: string) => {
+    return existingProductsInThisCategory.some(p => p.id === productId);
+  };
+
+  const handleProductRemove = (productId: string, productName: string) => {
+    Alert.alert(
+      'Ürünü Kaldır',
+      `"${productName}" ürünü listeden kaldırmak istediğinizden emin misiniz?`,
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Kaldır',
+          style: 'destructive',
+          onPress: () => {
+            // Ürünü existing products'tan kaldır
+            const updatedExistingProducts = existingProducts?.filter(p => p.id !== productId) || [];
+            
+            // Categories ekranına geri dön updated existingProducts ile
+            (navigation as any).navigate('Categories', {
+              listId,
+              listTitle,
+              existingProducts: updatedExistingProducts
+            });
+          }
+        }
+      ]
+    );
+  };
+
   const handleProductToggle = (product: typeof categoryProducts[0]) => {
+    // Zaten eklenmiş ürünleri kaldırma seçeneği sun
+    if (isProductAlreadyAdded(product.id)) {
+      handleProductRemove(product.id, product.name);
+      return;
+    }
+
     const existingIndex = selectedProducts.findIndex(p => p.id === product.id);
     
     if (existingIndex >= 0) {
@@ -44,7 +89,6 @@ export function CategoryProductsScreen() {
       setSelectedProducts(prev => [...prev, {
         id: product.id,
         name: product.name,
-        unit: product.unit,
         quantity: 1
       }]);
     }
@@ -60,7 +104,8 @@ export function CategoryProductsScreen() {
       listId,
       listTitle,
       categoryName,
-      selectedProducts
+      selectedProducts,
+      existingProducts
     });
   };
 
@@ -70,23 +115,39 @@ export function CategoryProductsScreen() {
 
   const renderProductItem = ({ item }: { item: typeof categoryProducts[0] }) => {
     const isSelected = isProductSelected(item.id);
+    const isAlreadyAdded = isProductAlreadyAdded(item.id);
 
     return (
       <TouchableOpacity
         className={`bg-card p-4 rounded-xl shadow-sm mb-3 mx-4 border-2 ${
-          isSelected ? 'border-primary bg-primary-light bg-opacity-10' : 'border-transparent'
+          isAlreadyAdded 
+            ? 'border-green-500 bg-green-50' 
+            : isSelected 
+              ? 'border-primary bg-primary-light bg-opacity-10' 
+              : 'border-transparent'
         }`}
         onPress={() => handleProductToggle(item)}
-        activeOpacity={0.7}
+        activeOpacity={isAlreadyAdded ? 0.5 : 0.7}
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-1">
-            <Text className="text-base font-medium text-textPrimary">
+            <Text className={`text-base font-medium ${
+              isAlreadyAdded ? 'text-green-700' : 'text-textPrimary'
+            }`}>
               {item.name}
             </Text>
+            {isAlreadyAdded && (
+              <Text className="text-xs text-green-600 mt-1">
+                Listede mevcut
+              </Text>
+            )}
           </View>
           
-          {isSelected ? (
+          {isAlreadyAdded ? (
+            <View className="w-6 h-6 bg-green-500 rounded-full items-center justify-center">
+              <Ionicons name="checkmark-done" size={16} color="white" />
+            </View>
+          ) : isSelected ? (
             <View className="w-6 h-6 bg-primary rounded-full items-center justify-center">
               <Ionicons name="checkmark" size={16} color="white" />
             </View>
@@ -120,7 +181,17 @@ export function CategoryProductsScreen() {
             <Ionicons name="arrow-back" size={24} color="#2b703b" />
           </TouchableOpacity>
           <Text className="text-lg font-bold text-textPrimary">{categoryName}</Text>
-          <View className="w-6" />
+          {existingProducts && existingProducts.length > 0 ? (
+            <TouchableOpacity onPress={() => (navigation as any).navigate('ListSummary', {
+              listId,
+              listTitle,
+              addedProducts: existingProducts
+            })}>
+              <Ionicons name="list" size={24} color="#2b703b" />
+            </TouchableOpacity>
+          ) : (
+            <View className="w-6" />
+          )}
         </View>
         
         <TextInput
@@ -132,7 +203,7 @@ export function CategoryProductsScreen() {
         />
         
         <Text className="text-sm text-textSecondary">
-          {filteredProducts.length} ürün • {selectedProducts.length} seçili
+          {filteredProducts.length} ürün • {selectedProducts.length} yeni seçili • {existingProductsInThisCategory.length} listede
         </Text>
       </View>
 
@@ -143,24 +214,40 @@ export function CategoryProductsScreen() {
           <FlatList
             data={filteredProducts}
             renderItem={renderProductItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => `${categoryId}-${item.id}`}
             contentContainerStyle={{ paddingVertical: 16 }}
             showsVerticalScrollIndicator={false}
           />
         )}
       </View>
 
-      {selectedProducts.length > 0 && (
+      {(selectedProducts.length > 0 || (existingProducts && existingProducts.length > 0)) && (
         <View className="border-t border-gray-100 p-4 bg-white">
-          <TouchableOpacity
-            className="bg-primary py-4 rounded-lg flex-row items-center justify-center"
-            onPress={handleContinue}
-          >
-            <Ionicons name="basket" size={20} color="white" style={{ marginRight: 8 }} />
-            <Text className="text-white font-bold text-base">
-              Devam Et ({selectedProducts.length} ürün)
-            </Text>
-          </TouchableOpacity>
+          {selectedProducts.length > 0 ? (
+            <TouchableOpacity
+              className="bg-primary py-4 rounded-lg flex-row items-center justify-center"
+              onPress={handleContinue}
+            >
+              <Ionicons name="basket" size={20} color="white" style={{ marginRight: 8 }} />
+              <Text className="text-white font-bold text-base">
+                Devam Et ({selectedProducts.length} ürün)
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              className="bg-gray-100 py-4 rounded-lg flex-row items-center justify-center"
+              onPress={() => (navigation as any).navigate('ListSummary', {
+                listId,
+                listTitle,
+                addedProducts: existingProducts
+              })}
+            >
+              <Ionicons name="list" size={20} color="#6B7280" style={{ marginRight: 8 }} />
+              <Text className="text-gray-700 font-bold text-base">
+                Liste Özetini Görüntüle ({existingProducts?.length || 0} ürün)
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </SafeAreaView>
