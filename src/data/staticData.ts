@@ -122,16 +122,16 @@ export const categories = [
 
 export const products = {
   'dry-foods': [
-    { id: 'red-lentil', name: 'Kırmızı Mercimek', unit: 'kg' },
-    { id: 'green-lentil', name: 'Yeşil Mercimek', unit: 'kg' },
-    { id: 'chickpea', name: 'Nohut', unit: 'kg' },
-    { id: 'kidney-bean', name: 'Barbunya', unit: 'kg' }
+    { id: 'red-lentil', name: 'Kırmızı Mercimek' },
+    { id: 'green-lentil', name: 'Yeşil Mercimek' },
+    { id: 'chickpea', name: 'Nohut' },
+    { id: 'kidney-bean', name: 'Barbunya' }
   ],
   'basic-foods': [
-    { id: 'salt', name: 'Tuz', unit: 'kg' },
-    { id: 'sugar', name: 'Şeker', unit: 'kg' },
-    { id: 'black-pepper', name: 'Karabiber', unit: 'gr' },
-    { id: 'red-pepper-flakes', name: 'Pul Biber', unit: 'gr' }
+    { id: 'salt', name: 'Tuz' },
+    { id: 'sugar', name: 'Şeker' },
+    { id: 'black-pepper', name: 'Karabiber' },
+    { id: 'red-pepper-flakes', name: 'Pul Biber' }
   ],
   'liquid-foods': [],
   'breakfast': [],

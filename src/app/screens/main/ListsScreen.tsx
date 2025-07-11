@@ -182,7 +182,7 @@ export function ListsScreen() {
         <FlatList
           data={lists}
           renderItem={renderListItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => `list-${item.id}`}
           contentContainerStyle={{ paddingVertical: 16 }}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={renderEmptyState}

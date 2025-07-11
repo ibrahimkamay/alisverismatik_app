@@ -8,18 +8,35 @@ import { CreateListModal } from '../screens/main/CreateListModal';
 import { CategoriesScreen } from '../screens/main/CategoriesScreen';
 import { CategoryProductsScreen } from '../screens/main/CategoryProductsScreen';
 import { PriceEntryScreen } from '../screens/main/PriceEntryScreen';
+import { ListSummaryScreen } from '../screens/main/ListSummaryScreen';
 
 export type MainStackParamList = {
   MainTabs: undefined;
   Categories: {
     listId: string;
     listTitle: string;
+    existingProducts?: Array<{
+      id: string;
+      name: string;
+      quantity: number;
+      unitPrice: number;
+      categoryId: string;
+      categoryName: string;
+    }>;
   };
   CategoryProducts: {
     listId: string;
     listTitle: string;
     categoryId: string;
     categoryName: string;
+    existingProducts?: Array<{
+      id: string;
+      name: string;
+      quantity: number;
+      unitPrice: number;
+      categoryId: string;
+      categoryName: string;
+    }>;
   };
   PriceEntry: {
     listId: string;
@@ -28,8 +45,27 @@ export type MainStackParamList = {
     selectedProducts: Array<{
       id: string;
       name: string;
-      unit: string;
       quantity: number;
+    }>;
+    existingProducts?: Array<{
+      id: string;
+      name: string;
+      quantity: number;
+      unitPrice: number;
+      categoryId: string;
+      categoryName: string;
+    }>;
+  };
+  ListSummary: {
+    listId: string;
+    listTitle: string;
+    addedProducts?: Array<{
+      id: string;
+      name: string;
+      quantity: number;
+      unitPrice: number;
+      categoryId: string;
+      categoryName: string;
     }>;
   };
 };
@@ -113,6 +149,10 @@ export function MainNavigator() {
       <Stack.Screen 
         name="PriceEntry" 
         component={PriceEntryScreen} 
+      />
+      <Stack.Screen 
+        name="ListSummary" 
+        component={ListSummaryScreen} 
       />
     </Stack.Navigator>
   );
