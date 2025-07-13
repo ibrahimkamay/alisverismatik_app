@@ -9,6 +9,7 @@ import { CategoriesScreen } from '../screens/main/CategoriesScreen';
 import { CategoryProductsScreen } from '../screens/main/CategoryProductsScreen';
 import { PriceEntryScreen } from '../screens/main/PriceEntryScreen';
 import { ListSummaryScreen } from '../screens/main/ListSummaryScreen';
+import { ShoppingCompletedScreen } from '../screens/main/ShoppingCompletedScreen';
 
 export type MainStackParamList = {
   MainTabs: undefined;
@@ -60,6 +61,18 @@ export type MainStackParamList = {
     listId: string;
     listTitle: string;
     addedProducts?: Array<{
+      id: string;
+      name: string;
+      quantity: number;
+      unitPrice: number;
+      categoryId: string;
+      categoryName: string;
+    }>;
+  };
+  ShoppingCompleted: {
+    listId: string;
+    listTitle: string;
+    completedItems: Array<{
       id: string;
       name: string;
       quantity: number;
@@ -153,6 +166,10 @@ export function MainNavigator() {
       <Stack.Screen 
         name="ListSummary" 
         component={ListSummaryScreen} 
+      />
+      <Stack.Screen 
+        name="ShoppingCompleted" 
+        component={ShoppingCompletedScreen} 
       />
     </Stack.Navigator>
   );
