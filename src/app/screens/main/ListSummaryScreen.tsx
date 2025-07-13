@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
@@ -257,7 +257,25 @@ export function ListSummaryScreen() {
           
           <TouchableOpacity
             className="flex-1 bg-primary py-3 rounded-lg flex-row items-center justify-center"
-            onPress={() => (navigation as any).navigate('Lists')}
+            onPress={() => {
+              const completedItems = listItems.filter(item => item.isCompleted);
+              if (completedItems.length === 0) {
+                Alert.alert('Uyarı', 'Lütfen en az bir ürünü tamamlayın!');
+                return;
+              }
+              (navigation as any).navigate('ShoppingCompleted', {
+                listId,
+                listTitle,
+                completedItems: completedItems.map(item => ({
+                  id: item.id,
+                  name: item.name,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  categoryId: item.categoryId,
+                  categoryName: item.categoryName
+                }))
+              });
+            }}
           >
             <Ionicons name="checkmark-circle" size={20} color="white" style={{ marginRight: 8 }} />
             <Text className="text-white font-semibold">Alışverişi Tamamla</Text>
