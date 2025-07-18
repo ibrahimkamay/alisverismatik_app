@@ -68,6 +68,9 @@ export interface Database {
           title: string
           quantity: number
           is_completed: boolean
+          category_id: string | null
+          category_name: string | null
+          unit_price: number | null
           created_at: string
           updated_at: string
         }
@@ -77,6 +80,9 @@ export interface Database {
           title: string
           quantity?: number
           is_completed?: boolean
+          category_id?: string | null
+          category_name?: string | null
+          unit_price?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -86,6 +92,9 @@ export interface Database {
           title?: string
           quantity?: number
           is_completed?: boolean
+          category_id?: string | null
+          category_name?: string | null
+          unit_price?: number | null
           created_at?: string
           updated_at?: string
         }

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
-import { products } from '../../../data/staticData';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
+import { categories, products } from '../../../data/staticData';
+import { MainStackParamList } from '../../navigation/MainNavigator';
+import { listService } from '../../../services/listService';
 
 type RouteParams = {
   CategoryProducts: {
@@ -31,24 +33,50 @@ interface SelectedProduct {
 export function CategoryProductsScreen() {
   const route = useRoute<RouteProp<RouteParams, 'CategoryProducts'>>();
   const navigation = useNavigation();
-  const { listId, listTitle, categoryId, categoryName, existingProducts } = route.params;
+  const { listId, listTitle, categoryId, categoryName } = route.params;
   
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
   const [searchText, setSearchText] = useState('');
+  const [existingProducts, setExistingProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const categoryProducts = products[categoryId as keyof typeof products] || [];
   
-  const existingProductsInThisCategory = existingProducts?.filter(p => p.categoryId === categoryId) || [];
-  
+  const fetchExistingProducts = async () => {
+    try {
+      setLoading(true);
+      const items = await listService.getListItems(listId);
+      setExistingProducts(items);
+    } catch (error: any) {
+      Alert.alert('Hata', 'Mevcut ürünler yüklenirken bir hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchExistingProducts();
+    }, [listId])
+  );
+
+  const existingProductsInThisCategory = existingProducts?.filter(p => p.category_id === categoryId) || [];
+
   const filteredProducts = categoryProducts.filter(product =>
     product.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
   const isProductAlreadyAdded = (productId: string) => {
-    return existingProductsInThisCategory.some(p => p.id === productId);
+    return existingProductsInThisCategory.some(p => p.title === productId || p.title === categoryProducts.find(cp => cp.id === productId)?.name);
   };
 
   const handleProductRemove = (productId: string, productName: string) => {
+    const existingItem = existingProductsInThisCategory.find(p => 
+      p.title === productName || p.title === productId
+    );
+    
+    if (!existingItem) return;
+
     Alert.alert(
       'Ürünü Kaldır',
       `"${productName}" ürünü listeden kaldırmak istediğinizden emin misiniz?`,
@@ -57,14 +85,13 @@ export function CategoryProductsScreen() {
         {
           text: 'Kaldır',
           style: 'destructive',
-          onPress: () => {
-            const updatedExistingProducts = existingProducts?.filter(p => p.id !== productId) || [];
-            
-            (navigation as any).navigate('Categories', {
-              listId,
-              listTitle,
-              existingProducts: updatedExistingProducts
-            });
+          onPress: async () => {
+            try {
+              await listService.deleteListItem(existingItem.id);
+              fetchExistingProducts();
+            } catch (error: any) {
+              Alert.alert('Hata', 'Ürün kaldırılırken bir hata oluştu');
+            }
           }
         }
       ]
@@ -100,8 +127,7 @@ export function CategoryProductsScreen() {
       listId,
       listTitle,
       categoryName,
-      selectedProducts,
-      existingProducts
+      selectedProducts
     });
   };
 

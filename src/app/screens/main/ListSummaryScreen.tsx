@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { categories } from '../../../data/staticData';
+import { MainStackParamList } from '../../navigation/MainNavigator';
+import { listService } from '../../../services/listService';
 
 type RouteParams = {
   ListSummary: {
@@ -43,24 +45,55 @@ interface CategorySummary {
 export function ListSummaryScreen() {
   const route = useRoute<RouteProp<RouteParams, 'ListSummary'>>();
   const navigation = useNavigation();
-  const { listId, listTitle, addedProducts } = route.params;
+  const { listId, listTitle } = route.params;
 
-  const [listItems, setListItems] = useState<ListItem[]>(
-    addedProducts?.map(product => ({
-      id: product.id,
-      name: product.name,
-      quantity: product.quantity,
-      unitPrice: product.unitPrice,
-      categoryId: product.categoryId,
-      categoryName: product.categoryName,
-      isCompleted: false
-    })) || []
+  const [listItems, setListItems] = useState<ListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchListItems = async () => {
+    try {
+      setLoading(true);
+      const items = await listService.getListItems(listId);
+      
+      const formattedItems: ListItem[] = items.map(item => ({
+        id: item.id,
+        name: item.title,
+        quantity: item.quantity,
+        unitPrice: item.unit_price || 0,
+        categoryId: item.category_id || '',
+        categoryName: item.category_name || '',
+        isCompleted: item.is_completed
+      }));
+      
+      setListItems(formattedItems);
+    } catch (error: any) {
+      Alert.alert('Hata', 'Liste öğeleri yüklenirken bir hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchListItems();
+    }, [listId])
   );
 
-  const toggleItemCompletion = (itemId: string) => {
-    setListItems(prev => prev.map(item => 
-      item.id === itemId ? { ...item, isCompleted: !item.isCompleted } : item
-    ));
+  const toggleItemCompletion = async (itemId: string) => {
+    const item = listItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    try {
+      await listService.updateListItem(itemId, {
+        is_completed: !item.isCompleted
+      });
+      
+      setListItems(prev => prev.map(i => 
+        i.id === itemId ? { ...i, isCompleted: !i.isCompleted } : i
+      ));
+    } catch (error: any) {
+      Alert.alert('Hata', 'Öğe güncellenirken bir hata oluştu');
+    }
   };
 
   const getCategorySummaries = (): CategorySummary[] => {
@@ -180,108 +213,95 @@ export function ListSummaryScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="px-4 py-4 border-b border-gray-100">
-        <View className="flex-row items-center justify-between mb-3">
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#2b703b" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => (navigation as any).navigate('Categories', { 
-            listId, 
-            listTitle,
-            existingProducts: listItems.map(item => ({
-              id: item.id,
-              name: item.name,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              categoryId: item.categoryId,
-              categoryName: item.categoryName
-            }))
-          })}>
-            <Ionicons name="add" size={24} color="#2b703b" />
-          </TouchableOpacity>
+      <View className="flex-row items-center justify-between p-4 bg-white border-b border-gray-100">
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#2b703b" />
+        </TouchableOpacity>
+        <View className="flex-1 ml-3">
+          <Text className="text-lg font-bold text-textPrimary">{listTitle}</Text>
+          <Text className="text-sm text-textSecondary">
+            {loading ? 'Yükleniyor...' : `${listItems.length} ürün • ${getCompletedItemsCount()} tamamlandı`}
+          </Text>
         </View>
-        
-        <Text className="text-2xl font-bold text-textPrimary mb-1">{listTitle}</Text>
-        <Text className="text-base text-textSecondary">
-          {listItems.length} ürün • ₺{totalPrice.toFixed(2)}
-        </Text>
+        <TouchableOpacity onPress={() => (navigation as any).navigate('Categories', { listId, listTitle })}>
+          <Ionicons name="add" size={24} color="#2b703b" />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="py-4">
-          {listItems.length === 0 ? (
-            <View className="flex-1 items-center justify-center px-8 py-16">
-              <View className="w-24 h-24 bg-gray-100 rounded-full items-center justify-center mb-6">
-                <Ionicons name="basket-outline" size={48} color="#9CA3AF" />
-              </View>
-              <Text className="text-xl font-bold text-textPrimary mb-2 text-center">
-                Liste boş
-              </Text>
-              <Text className="text-base text-textSecondary text-center">
-                Kategorilerden ürün ekleyerek alışveriş listenizi oluşturun
-              </Text>
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-textSecondary">Yükleniyor...</Text>
+        </View>
+      ) : listItems.length === 0 ? (
+        <View className="flex-1 justify-center items-center px-8">
+          <Ionicons name="basket-outline" size={64} color="#9CA3AF" />
+          <Text className="text-lg font-medium text-textPrimary mt-4 text-center">
+            Henüz ürün eklenmemiş
+          </Text>
+          <Text className="text-textSecondary mt-2 text-center">
+            Kategorilerden ürün ekleyerek alışveriş listenizi oluşturun
+          </Text>
+          <TouchableOpacity
+            className="bg-primary py-3 px-6 rounded-lg mt-6"
+            onPress={() => (navigation as any).navigate('Categories', { listId, listTitle })}
+          >
+            <Text className="text-white font-semibold">Ürün Ekle</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            <View className="py-4">
+              {getCategorySummaries().map(category => renderCategorySection(category))}
             </View>
-                     ) : (
-             getCategorySummaries().map(category => renderCategorySection(category))
-           )}
-        </View>
-      </ScrollView>
+          </ScrollView>
 
-      <View className="border-t border-gray-100 p-4 bg-white">
-        <View className="flex-row justify-between items-center mb-4">
-          <View>
-            <Text className="text-sm text-textSecondary">Toplam Tutar</Text>
+          <View className="border-t border-gray-100 p-4 bg-white">
+            <View className="flex-row justify-between items-center mb-4">
+              <View>
+                <Text className="text-sm text-textSecondary">Toplam Tutar</Text>
                         <Text className="text-2xl font-bold text-primary">₺{totalPrice.toFixed(2)}</Text>
+              </View>
+            </View>
+            
+            <View className="flex-row space-x-3">
+              <TouchableOpacity
+                className="flex-1 bg-gray-100 py-3 rounded-lg flex-row items-center justify-center"
+                onPress={() => (navigation as any).navigate('Categories', { listId, listTitle })}
+              >
+                <Ionicons name="add-outline" size={20} color="#6B7280" style={{ marginRight: 8 }} />
+                <Text className="text-gray-700 font-semibold">Ürün Ekle</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                className="flex-1 bg-primary py-3 rounded-lg flex-row items-center justify-center"
+                onPress={() => {
+                  const completedItems = listItems.filter(item => item.isCompleted);
+                  if (completedItems.length === 0) {
+                    Alert.alert('Uyarı', 'Lütfen en az bir ürünü tamamlayın!');
+                    return;
+                  }
+                  (navigation as any).navigate('ShoppingCompleted', {
+                    listId,
+                    listTitle,
+                    completedItems: completedItems.map(item => ({
+                      id: item.id,
+                      name: item.name,
+                      quantity: item.quantity,
+                      unitPrice: item.unitPrice,
+                      categoryId: item.categoryId,
+                      categoryName: item.categoryName
+                    }))
+                  });
+                }}
+              >
+                <Ionicons name="checkmark-circle" size={20} color="white" style={{ marginRight: 8 }} />
+                <Text className="text-white font-semibold">Alışverişi Tamamla</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-        
-        <View className="flex-row space-x-3">
-          <TouchableOpacity
-            className="flex-1 bg-gray-100 py-3 rounded-lg flex-row items-center justify-center"
-            onPress={() => (navigation as any).navigate('Categories', { 
-              listId, 
-              listTitle,
-              existingProducts: listItems.map(item => ({
-                id: item.id,
-                name: item.name,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                categoryId: item.categoryId,
-                categoryName: item.categoryName
-              }))
-            })}
-          >
-            <Ionicons name="add-outline" size={20} color="#6B7280" style={{ marginRight: 8 }} />
-            <Text className="text-gray-700 font-semibold">Ürün Ekle</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            className="flex-1 bg-primary py-3 rounded-lg flex-row items-center justify-center"
-            onPress={() => {
-              const completedItems = listItems.filter(item => item.isCompleted);
-              if (completedItems.length === 0) {
-                Alert.alert('Uyarı', 'Lütfen en az bir ürünü tamamlayın!');
-                return;
-              }
-              (navigation as any).navigate('ShoppingCompleted', {
-                listId,
-                listTitle,
-                completedItems: completedItems.map(item => ({
-                  id: item.id,
-                  name: item.name,
-                  quantity: item.quantity,
-                  unitPrice: item.unitPrice,
-                  categoryId: item.categoryId,
-                  categoryName: item.categoryName
-                }))
-              });
-            }}
-          >
-            <Ionicons name="checkmark-circle" size={20} color="white" style={{ marginRight: 8 }} />
-            <Text className="text-white font-semibold">Alışverişi Tamamla</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+        </>
+      )}
     </SafeAreaView>
   );
 } 

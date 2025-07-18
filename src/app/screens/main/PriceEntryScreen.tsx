@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { MainStackParamList } from '../../navigation/MainNavigator';
+import { listService } from '../../../services/listService';
+import { categories } from '../../../data/staticData';
 
 type RouteParams = {
   PriceEntry: {
@@ -52,7 +55,7 @@ export function PriceEntryScreen() {
     ));
   };
 
-  const handleAddToList = () => {
+  const handleAddToList = async () => {
     const missingPrices = productsWithPrices.filter(p => !p.price || parseFloat(p.price) <= 0);
     
     if (missingPrices.length > 0) {
@@ -64,55 +67,48 @@ export function PriceEntryScreen() {
       return;
     }
 
-    Alert.alert(
-      'Ürünler Eklendi!',
-      'Başka kategorilerden de ürün eklemek ister misiniz?',
-      [
-        {
-          text: 'Özeti Görüntüle',
-          style: 'cancel',
-          onPress: () => {
-            const newProducts = productsWithPrices.map(p => ({
-              id: p.id,
-              name: p.name,
-              quantity: p.quantity,
-              unitPrice: parseFloat(p.price),
-              categoryId: categoryName === 'Kuru Gıdalar & Bakliyat' ? 'dry-foods' : 'basic-foods',
-              categoryName: categoryName,
-            }));
-            
-            const allProducts = [...(existingProducts || []), ...newProducts];
-            
-            (navigation as any).navigate('ListSummary', {
-              listId,
-              listTitle,
-              addedProducts: allProducts
-            });
+    try {
+      const category = categories.find(cat => cat.name === categoryName);
+      const categoryId = category?.id || 'other';
+
+      const newProducts = productsWithPrices.map(p => ({
+        title: p.name,
+        quantity: p.quantity,
+        categoryId: categoryId,
+        categoryName: categoryName,
+        unitPrice: parseFloat(p.price)
+      }));
+
+      await listService.addListItems(listId, newProducts);
+
+      Alert.alert(
+        'Ürünler Eklendi!',
+        'Başka kategorilerden de ürün eklemek ister misiniz?',
+        [
+          {
+            text: 'Özeti Görüntüle',
+            style: 'cancel',
+            onPress: () => {
+              (navigation as any).navigate('ListSummary', {
+                listId,
+                listTitle
+              });
+            }
+          },
+          {
+            text: 'Başka Kategori Ekle',
+            onPress: () => {
+              (navigation as any).navigate('Categories', {
+                listId,
+                listTitle
+              });
+            }
           }
-        },
-        {
-          text: 'Başka Kategori Ekle',
-          onPress: () => {
-            const newProducts = productsWithPrices.map(p => ({
-              id: p.id,
-              name: p.name,
-              quantity: p.quantity,
-              unitPrice: parseFloat(p.price),
-              categoryId: categoryName === 'Kuru Gıdalar & Bakliyat' ? 'dry-foods' : 'basic-foods',
-              categoryName: categoryName,
-            }));
-            
-            const allProducts = [...(existingProducts || []), ...newProducts];
-            
-            (navigation as any).navigate('Categories', {
-              listId,
-              listTitle,
-              existingProducts: allProducts
-            });
-          }
-        }
-      ]
-    );
+        ]
+      );
+    } catch (error: any) {
+      Alert.alert('Hata', error.message || 'Ürünler eklenirken bir hata oluştu');
+    }
   };
 
   const getTotalPrice = () => {
