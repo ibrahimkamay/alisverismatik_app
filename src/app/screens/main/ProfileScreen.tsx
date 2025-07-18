@@ -57,28 +57,70 @@ export function ProfileScreen() {
       id: 1, 
       title: 'Hesap Bilgileri', 
       icon: 'person-outline', 
-      onPress: () => (navigation as any).navigate('AccountSettings')
+      onPress: () => (navigation as any).navigate('AccountSettings'),
+      enabled: true
     },
-    { id: 2, title: 'Bildirimler', icon: 'notifications-outline', onPress: () => {} },
-    { id: 3, title: 'Gizlilik', icon: 'shield-outline', onPress: () => {} },
-    { id: 4, title: 'Yardım', icon: 'help-circle-outline', onPress: () => {} },
-    { id: 5, title: 'Hakkında', icon: 'information-circle-outline', onPress: () => {} },
+    { 
+      id: 2, 
+      title: 'Bildirimler', 
+      icon: 'notifications-outline', 
+      onPress: () => {},
+      enabled: false
+    },
+    { 
+      id: 3, 
+      title: 'Gizlilik', 
+      icon: 'shield-outline', 
+      onPress: () => {},
+      enabled: false
+    },
+    { 
+      id: 4, 
+      title: 'Yardım', 
+      icon: 'help-circle-outline', 
+      onPress: () => {},
+      enabled: false
+    },
+    { 
+      id: 5, 
+      title: 'Hakkında', 
+      icon: 'information-circle-outline', 
+      onPress: () => {},
+      enabled: false
+    },
   ];
 
   const renderProfileItem = (item: typeof profileItems[0]) => (
     <TouchableOpacity
       key={item.id}
-      className="bg-card p-4 rounded-xl shadow-sm mb-3 mx-4"
-      onPress={item.onPress}
+      className={`bg-card p-4 rounded-xl shadow-sm mb-3 mx-4 ${!item.enabled ? 'opacity-50' : ''}`}
+      onPress={item.enabled ? item.onPress : undefined}
+      disabled={!item.enabled}
+      activeOpacity={item.enabled ? 0.7 : 1}
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
-          <View className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center mr-3">
-            <Ionicons name={item.icon as any} size={20} color="#6B7280" />
+          <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${item.enabled ? 'bg-gray-100' : 'bg-gray-50'}`}>
+            <Ionicons 
+              name={item.icon as any} 
+              size={20} 
+              color={item.enabled ? "#6B7280" : "#D1D5DB"} 
+            />
           </View>
-          <Text className="text-base font-medium text-textPrimary">{item.title}</Text>
+          <View className="flex-1 flex-row items-center justify-between">
+            <Text className={`text-base font-medium ${item.enabled ? 'text-textPrimary' : 'text-gray-400'}`}>
+              {item.title}
+            </Text>
+            {!item.enabled && (
+              <Text className="text-xs text-gray-400 mr-2">Yakında</Text>
+            )}
+          </View>
         </View>
-        <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+        <Ionicons 
+          name="chevron-forward" 
+          size={16} 
+          color={item.enabled ? "#9CA3AF" : "#D1D5DB"} 
+        />
       </View>
     </TouchableOpacity>
   );
