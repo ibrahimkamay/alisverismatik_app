@@ -38,7 +38,6 @@ export function CategoryProductsScreen() {
   
   const categoryProducts = products[categoryId as keyof typeof products] || [];
   
-  // Bu kategoriden zaten eklenmiş ürünleri bul
   const existingProductsInThisCategory = existingProducts?.filter(p => p.categoryId === categoryId) || [];
   
   const filteredProducts = categoryProducts.filter(product =>
@@ -59,10 +58,8 @@ export function CategoryProductsScreen() {
           text: 'Kaldır',
           style: 'destructive',
           onPress: () => {
-            // Ürünü existing products'tan kaldır
             const updatedExistingProducts = existingProducts?.filter(p => p.id !== productId) || [];
             
-            // Categories ekranına geri dön updated existingProducts ile
             (navigation as any).navigate('Categories', {
               listId,
               listTitle,
@@ -75,7 +72,6 @@ export function CategoryProductsScreen() {
   };
 
   const handleProductToggle = (product: typeof categoryProducts[0]) => {
-    // Zaten eklenmiş ürünleri kaldırma seçeneği sun
     if (isProductAlreadyAdded(product.id)) {
       handleProductRemove(product.id, product.name);
       return;
@@ -196,6 +192,7 @@ export function CategoryProductsScreen() {
         
         <TextInput
           className="bg-inputBg border border-gray-300 text-textPrimary text-base rounded-lg p-3 mb-2"
+          style={{ minHeight: 48, paddingVertical: 12 }}
           placeholder="Ürün ara..."
           placeholderTextColor="#9CA3AF"
           value={searchText}

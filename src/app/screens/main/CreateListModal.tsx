@@ -110,6 +110,7 @@ export function CreateListModal() {
               <Text className="text-base font-medium text-textPrimary mb-2">Liste Adı</Text>
               <TextInput
                 className="bg-inputBg border border-gray-300 text-textPrimary text-base rounded-lg p-3 w-full focus:border-primary"
+                style={{ minHeight: 48, paddingVertical: 12 }}
                 placeholder="Örn: Market Alışverişi"
                 placeholderTextColor="#9CA3AF"
                 value={listTitle}
@@ -129,6 +130,7 @@ export function CreateListModal() {
               </Text>
               <TextInput
                 className="bg-inputBg border border-gray-300 text-textPrimary text-base rounded-lg p-3 w-full focus:border-primary"
+                style={{ minHeight: 48, paddingVertical: 12 }}
                 placeholder="Bu liste hakkında kısa bir açıklama..."
                 placeholderTextColor="#9CA3AF"
                 value={listDescription}

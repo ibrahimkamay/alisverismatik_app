@@ -54,6 +54,7 @@ export function LoginScreen() {
               <Text className="text-base font-medium text-textPrimary mb-2">E-posta</Text>
               <TextInput
                 className="bg-inputBg border border-gray-300 text-textPrimary text-base rounded-lg p-3 w-full focus:border-primary focus:ring-1 focus:ring-primary"
+                style={{ minHeight: 48, paddingVertical: 12 }}
                 placeholder="E-posta adresinizi girin"
                 placeholderTextColor="#9CA3AF"
                 value={email}
@@ -68,6 +69,7 @@ export function LoginScreen() {
               <Text className="text-base font-medium text-textPrimary mb-2">Şifre</Text>
               <TextInput
                 className="bg-inputBg border border-gray-300 text-textPrimary text-base rounded-lg p-3 w-full focus:border-primary focus:ring-1 focus:ring-primary"
+                style={{ minHeight: 48, paddingVertical: 12 }}
                 placeholder="Şifrenizi girin"
                 placeholderTextColor="#9CA3AF"
                 value={password}

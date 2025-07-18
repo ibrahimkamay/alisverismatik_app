@@ -144,6 +144,7 @@ export function PriceEntryScreen() {
           <View className="flex-1 mr-3">
             <TextInput
               className="bg-inputBg border border-gray-300 text-textPrimary text-base rounded-lg p-3"
+              style={{ minHeight: 48, paddingVertical: 12 }}
               placeholder="Fiyat girin..."
               placeholderTextColor="#9CA3AF"
               value={item.price}
