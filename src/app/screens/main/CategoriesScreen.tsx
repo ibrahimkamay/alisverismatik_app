@@ -11,14 +11,6 @@ type RouteParams = {
   Categories: {
     listId: string;
     listTitle: string;
-    existingProducts?: Array<{
-      id: string;
-      name: string;
-      quantity: number;
-      unitPrice: number;
-      categoryId: string;
-      categoryName: string;
-    }>;
   };
 };
 
@@ -27,15 +19,14 @@ type NavigationProp = StackNavigationProp<MainStackParamList, 'Categories'>;
 export function CategoriesScreen() {
   const route = useRoute<RouteProp<RouteParams, 'Categories'>>();
   const navigation = useNavigation<NavigationProp>();
-  const { listId, listTitle, existingProducts } = route.params;
+  const { listId, listTitle } = route.params;
 
   const handleCategoryPress = (categoryId: string, categoryName: string) => {
     navigation.navigate('CategoryProducts', {
       listId,
       listTitle,
       categoryId,
-      categoryName,
-      existingProducts
+      categoryName
     });
   };
 
@@ -72,27 +63,12 @@ export function CategoriesScreen() {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color="#2b703b" />
           </TouchableOpacity>
-          {existingProducts && existingProducts.length > 0 ? (
-            <TouchableOpacity onPress={() => (navigation as any).navigate('ListSummary', {
-              listId,
-              listTitle,
-              addedProducts: existingProducts
-            })}>
-              <Ionicons name="list" size={24} color="#2b703b" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity>
-              <Ionicons name="search" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          )}
+          <View />
         </View>
         
         <Text className="text-2xl font-bold text-textPrimary mb-1">{listTitle}</Text>
         <Text className="text-base text-textSecondary">
-          {existingProducts && existingProducts.length > 0 
-            ? `${existingProducts.length} ürün eklendi • Kategori seçin ve devam edin`
-            : 'Kategori seçin ve ürün ekleyin'
-          }
+                    Kategori seçin ve ürün ekleyin
         </Text>
       </View>
 

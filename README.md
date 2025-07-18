@@ -48,7 +48,6 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 Supabase SQL Editor'da aşağıdaki tabloları oluşturun:
 
 ```sql
--- Kullanıcı profilleri tablosu
 CREATE TABLE profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
@@ -59,7 +58,6 @@ CREATE TABLE profiles (
   PRIMARY KEY (id)
 );
 
--- Alışveriş listeleri tablosu
 CREATE TABLE shopping_lists (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
@@ -69,29 +67,42 @@ CREATE TABLE shopping_lists (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Alışveriş listesi öğeleri tablosu
 CREATE TABLE shopping_list_items (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   shopping_list_id UUID REFERENCES shopping_lists(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   quantity INTEGER DEFAULT 1,
   is_completed BOOLEAN DEFAULT FALSE,
+  category_id TEXT,
+  category_name TEXT,
+  unit_price DECIMAL(10,2),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Row Level Security (RLS) politikalarını etkinleştirin
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shopping_lists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shopping_list_items ENABLE ROW LEVEL SECURITY;
 
--- Güvenlik politikaları
 CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can view own lists" ON shopping_lists FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can create own lists" ON shopping_lists FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own lists" ON shopping_lists FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own lists" ON shopping_lists FOR DELETE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can view own list items" ON shopping_list_items FOR SELECT USING (
+  auth.uid() IN (SELECT user_id FROM shopping_lists WHERE id = shopping_list_items.shopping_list_id)
+);
+CREATE POLICY "Users can create own list items" ON shopping_list_items FOR INSERT WITH CHECK (
+  auth.uid() IN (SELECT user_id FROM shopping_lists WHERE id = shopping_list_items.shopping_list_id)
+);
+CREATE POLICY "Users can update own list items" ON shopping_list_items FOR UPDATE USING (
+  auth.uid() IN (SELECT user_id FROM shopping_lists WHERE id = shopping_list_items.shopping_list_id)
+);
+CREATE POLICY "Users can delete own list items" ON shopping_list_items FOR DELETE USING (
+  auth.uid() IN (SELECT user_id FROM shopping_lists WHERE id = shopping_list_items.shopping_list_id)
+);
 ```
 
 ### 5. Uygulamayı çalıştırın

@@ -10,34 +10,19 @@ import { CategoryProductsScreen } from '../screens/main/CategoryProductsScreen';
 import { PriceEntryScreen } from '../screens/main/PriceEntryScreen';
 import { ListSummaryScreen } from '../screens/main/ListSummaryScreen';
 import { ShoppingCompletedScreen } from '../screens/main/ShoppingCompletedScreen';
+import { AccountSettingsScreen } from '../screens/main/AccountSettingsScreen';
 
 export type MainStackParamList = {
   MainTabs: undefined;
   Categories: {
     listId: string;
     listTitle: string;
-    existingProducts?: Array<{
-      id: string;
-      name: string;
-      quantity: number;
-      unitPrice: number;
-      categoryId: string;
-      categoryName: string;
-    }>;
   };
   CategoryProducts: {
     listId: string;
     listTitle: string;
     categoryId: string;
     categoryName: string;
-    existingProducts?: Array<{
-      id: string;
-      name: string;
-      quantity: number;
-      unitPrice: number;
-      categoryId: string;
-      categoryName: string;
-    }>;
   };
   PriceEntry: {
     listId: string;
@@ -48,26 +33,10 @@ export type MainStackParamList = {
       name: string;
       quantity: number;
     }>;
-    existingProducts?: Array<{
-      id: string;
-      name: string;
-      quantity: number;
-      unitPrice: number;
-      categoryId: string;
-      categoryName: string;
-    }>;
   };
   ListSummary: {
     listId: string;
     listTitle: string;
-    addedProducts?: Array<{
-      id: string;
-      name: string;
-      quantity: number;
-      unitPrice: number;
-      categoryId: string;
-      categoryName: string;
-    }>;
   };
   ShoppingCompleted: {
     listId: string;
@@ -81,6 +50,7 @@ export type MainStackParamList = {
       categoryName: string;
     }>;
   };
+  AccountSettings: undefined;
 };
 
 export type MainTabParamList = {
@@ -170,6 +140,10 @@ export function MainNavigator() {
       <Stack.Screen 
         name="ShoppingCompleted" 
         component={ShoppingCompletedScreen} 
+      />
+      <Stack.Screen 
+        name="AccountSettings" 
+        component={AccountSettingsScreen} 
       />
     </Stack.Navigator>
   );
